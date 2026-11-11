@@ -19,7 +19,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
 # ---------- CONFIG ----------
-BOT_TOKEN = "9168231658:AAHpcApRAIY_3tCcn23nC0C--nwbN9_yMNM"
+BOT_TOKEN = "9168231658:AAEsqdnGOQTDMiWbstJ_FOBP78k8r0JBop0"
 ADMIN_ID = 424384984
 
 # Billplz
