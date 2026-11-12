@@ -1357,7 +1357,7 @@ def _fetch_twelvedata(pair, timeframe="M5", limit=120):
     iv_map = {"M1": "1min", "M5": "5min", "M15": "15min", "H1": "1h", "H4": "4h"}
     iv = iv_map.get(timeframe, "5min")
     # Cuba demo key dulu, kalau user ada key sendiri boleh tukar kat sini
-    for api_key in ["95f80fced4c14a8b9b9b6c1af901f6c2"]:
+   for api_key in [os.getenv("TWELVEDATA_API_KEY", "")]:
         try:
             url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval={iv}&outputsize={limit}&apikey={api_key}"
             r = _req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
@@ -1942,9 +1942,9 @@ def _fetch_twelvedata(pair, timeframe="M5", limit=120):
     iv_map = {"M1": "1min", "M5": "5min", "M15": "15min", "H1": "1h", "H4": "4h"}
     iv = iv_map.get(timeframe, "5min")
     # Cuba demo key dulu, kalau user ada key sendiri boleh tukar kat sini
-    for api_key in ["95f80fced4c14a8b9b9b6c1af901f6c2"]:
+   for api_key in [os.getenv("TWELVEDATA_API_KEY", "")]:
         try:
-            url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval={iv}&outputsize={limit}&apikey={api_key}"
+            url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval={iv}&outputsize={limit}&apikey={os.getenv('TWELVEDATA_API_KEY', '')}"
             r = _req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
             if r.status_code != 200:
                 print(f"TwelveData {sym} status {r.status_code}")
@@ -2176,7 +2176,7 @@ def _fetch_twelvedata_ohlc(pair, timeframe="H1", limit=50):
     iv_map = {"M1": "1min", "M5": "5min", "M15": "15min", "H1": "1h", "H4": "4h"}
     iv = iv_map.get(timeframe, "1h")
     try:
-        url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval={iv}&outputsize={limit}&apikey=95f80fced4c14a8b9b9b6c1af901f6c2"
+        url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval={iv}&outputsize={limit}&apikey={os.getenv('TWELVEDATA_API_KEY', '')}"
         r = _req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
         if r.status_code != 200:
             return []
@@ -4049,7 +4049,7 @@ async def debug_data_cmd(update, context):
         results.append(f"Binance Vision EUR: ERROR {e}")
     # 3. TwelveData XAU
     try:
-        r = _rdbg.get("https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=5min&outputsize=5&apikey=95f80fced4c14a8b9b9b6c1af901f6c2", timeout=60)
+        r = _rdbg.get(f"https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=5min&outputsize=5&apikey={os.getenv('TWELVEDATA_API_KEY', '')}", timeout=60)
         j = r.json()
         if "values" in j:
             results.append(f"TwelveData XAU: OK len {len(j['values'])}")
@@ -4059,7 +4059,7 @@ async def debug_data_cmd(update, context):
         results.append(f"TwelveData XAU: ERROR {e}")
     # 4. TwelveData EUR
     try:
-        r = _rdbg.get("https://api.twelvedata.com/time_series?symbol=EUR/USD&interval=5min&outputsize=5&apikey=95f80fced4c14a8b9b9b6c1af901f6c2", timeout=60)
+        r = _rdbg.get(f"https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=5min&outputsize=5&apikey={os.getenv('TWELVEDATA_API_KEY', '')}", timeout=60)
         j = r.json()
         if "values" in j:
             results.append(f"TwelveData EUR: OK len {len(j['values'])}")
