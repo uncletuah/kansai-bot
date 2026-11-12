@@ -2408,57 +2408,73 @@ def _calc_stoch(ohlc_list, period=14, smooth_k=3, smooth_d=3):
     return (k_now, d_now, k_prev, d_prev), k_smooth, "OK"
 
 def _check_scalping_ai(pair):
-    # SCALPING BARU - USER 2026-11-11 (M1 + M5 SAHAJA untuk signal)
-    # BUY: RSI 10-20 kat M1 DAN M5 + Stoch 10-20 kat M1 DAN M5 (oversold)
-    # SELL: RSI 80-90 kat M1 DAN M5 + Stoch 80-90 kat M1 DAN M5 (overbought)
-    # M15 HANYA untuk TP3: Kalau M15 pun confirm (RSI + Stoch sama zone) -> TP3 valid, bagi TP1+TP2+TP3
-    # Kalau M15 tak confirm -> TP1 + TP2 SAHAJA, takde TP3
+    """
+    Strong Scalping - Version lebih realistic
+    - M5 sebagai timeframe utama
+    - M1 sebagai confirmation
+    - RSI 15-28 (Buy) / 72-85 (Sell)
+    - Stochastic mula pusing dari oversold/overbought
+    """
     m1_closes = _get_candles(pair, "M1")
     m5_closes = _get_candles(pair, "M5")
     m15_closes = _get_candles(pair, "M15")
+    
     m5_ohlc = _fetch_ohlc(pair, "M5", 60)
     m1_ohlc = _fetch_ohlc(pair, "M1", 60)
     m15_ohlc = _fetch_ohlc(pair, "M15", 60)
-    if len(m5_closes) < 30 or len(m1_closes) < 30:
+
+    if len(m5_closes) < 40 or len(m1_closes) < 30:
         return None, None, "Data tak cukup", False
+
     price = m5_closes[-1]
-    rsi_m1 = _rsi_list(m1_closes, 14) if len(m1_closes) >= 30 else None
+
+    # Indicators
     rsi_m5 = _rsi_list(m5_closes, 14)
+    rsi_m1 = _rsi_list(m1_closes, 14) if len(m1_closes) >= 30 else None
     rsi_m15 = _rsi_list(m15_closes, 14) if len(m15_closes) >= 30 else None
-    # Stoch M5 (utama) + M1 (confirm)
+
     stoch_m5 = _calc_stoch(m5_ohlc, 14, 3, 3)
     stoch_m1 = _calc_stoch(m1_ohlc, 14, 3, 3)
     stoch_m15 = _calc_stoch(m15_ohlc, 14, 3, 3) if m15_ohlc else (None, None, "no data")
-    if stoch_m5[0] is None or stoch_m1[0] is None:
-        return None, price, f"RSI M1 {rsi_m1} M5 {rsi_m5:.1f} - Stochastic tak cukup data", False
+
+    if stoch_m5[0] is None:
+        return None, price, "Stochastic M5 tak cukup data", False
+
     (k5, d5, k5_prev, d5_prev), _, _ = stoch_m5
-    (k1, d1, k1_prev, d1_prev), _, _ = stoch_m1
-    # Reversal - M5 utama
-    stoch_up = k5 > d5 and k5 > k5_prev
-    stoch_down = k5 < d5 and k5 < k5_prev
-    # M1 + M5 KENA DUA-DUA dalam zone
-    rsi_buy_ok = (rsi_m1 is not None and 10 <= rsi_m1 <= 20) and (10 <= rsi_m5 <= 20)
-    rsi_sell_ok = (rsi_m1 is not None and 80 <= rsi_m1 <= 90) and (80 <= rsi_m5 <= 90)
-    stoch_buy_ok = (10 <= k1 <= 20) and (10 <= k5 <= 20)
-    stoch_sell_ok = (80 <= k1 <= 90) and (80 <= k5 <= 90)
-    # M15 confirm untuk TP3 - RSI M15 DAN Stoch M15 sama zone
-    tp3_buy = False
-    tp3_sell = False
-    if rsi_m15 is not None and stoch_m15[0] is not None:
-        k15 = stoch_m15[0][0]
-        tp3_buy = (10 <= rsi_m15 <= 20) and (10 <= k15 <= 20)
-        tp3_sell = (80 <= rsi_m15 <= 90) and (80 <= k15 <= 90)
-    # BUY - M1+M5 RSI 10-20 + Stoch 10-20
-    if rsi_buy_ok and stoch_buy_ok:
-        tp3_valid = tp3_buy
-        tp_txt = "M15 CONFIRM - TP1+TP2+TP3" if tp3_valid else "M15 TAK CONFIRM - TP1+TP2 SAHAJA"
-        return "BUY", price, f"SCALPING BUY - RSI M1 {rsi_m1:.1f} M5 {rsi_m5:.1f} (10-20 OVERSOLD) + Stoch M1 K {k1:.1f} M5 K {k5:.1f} D {d5:.1f} (10-20) | {tp_txt}", tp3_valid
-    # SELL - M1+M5 RSI 80-90 + Stoch 80-90
-    if rsi_sell_ok and stoch_sell_ok:
-        tp3_valid = tp3_sell
-        tp_txt = "M15 CONFIRM - TP1+TP2+TP3" if tp3_valid else "M15 TAK CONFIRM - TP1+TP2 SAHAJA"
-        return "SELL", price, f"SCALPING SELL - RSI M1 {rsi_m1:.1f} M5 {rsi_m5:.1f} (80-90 OVERBOUGHT) + Stoch M1 K {k1:.1f} M5 K {k5:.1f} D {d5:.1f} (80-90) | {tp_txt}", tp3_valid
-    return None, price, f"Tunggu SCALPING - RSI M1 {rsi_m1} M5 {rsi_m5:.1f} (Buy 10-20 / Sell 80-90) Stoch M1 K {k1:.1f} M5 K {k5:.1f} D {d5:.1f} | M15 RSI {rsi_m15}", False
+    k1 = stoch_m1[0][0] if stoch_m1 and stoch_m1[0] else 50
+
+    # ====================== BUY ======================
+    buy_rsi_ok = 15 <= rsi_m5 <= 28
+    buy_stoch_ok = k5 <= 25 and k5 > k5_prev          # mula naik dari oversold
+    buy_m1_ok = (rsi_m1 is None) or (rsi_m1 < 40)
+
+    if buy_rsi_ok and buy_stoch_ok and buy_m1_ok:
+        # Check M15 untuk TP3
+        tp3_valid = False
+        if rsi_m15 is not None and stoch_m15[0] is not None:
+            k15 = stoch_m15[0][0]
+            if rsi_m15 <= 35 and k15 <= 30:
+                tp3_valid = True
+
+        reason = f"STRONG BUY | RSI M5 {rsi_m5:.1f} | Stoch K {k5:.1f} naik | M1 confirm"
+        return "BUY", price, reason, tp3_valid
+
+    # ====================== SELL ======================
+    sell_rsi_ok = 72 <= rsi_m5 <= 85
+    sell_stoch_ok = k5 >= 75 and k5 < k5_prev          # mula turun dari overbought
+    sell_m1_ok = (rsi_m1 is None) or (rsi_m1 > 60)
+
+    if sell_rsi_ok and sell_stoch_ok and sell_m1_ok:
+        tp3_valid = False
+        if rsi_m15 is not None and stoch_m15[0] is not None:
+            k15 = stoch_m15[0][0]
+            if rsi_m15 >= 65 and k15 >= 70:
+                tp3_valid = True
+
+        reason = f"STRONG SELL | RSI M5 {rsi_m5:.1f} | Stoch K {k5:.1f} turun | M1 confirm"
+        return "SELL", price, reason, tp3_valid
+
+    return None, price, f"Tunggu | RSI M5 {rsi_m5:.1f} | Stoch K {k5:.1f}", False
 
 def _check_weak_scalping_ai(pair):
     # WEAK SIGNAL - BETUL IKUT BINCANG: Stoch SAJA 5,3,3, M1 & M5 dua-dua kena sama
