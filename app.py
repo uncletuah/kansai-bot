@@ -28,9 +28,9 @@ BILLPLZ_COLLECTION_ID = os.getenv("BILLPLZ_COLLECTION_ID", "")
 BILLPLZ_X_SIGNATURE = os.getenv("BILLPLZ_X_SIGNATURE", "")
 
 # DuitNow / Bank Manual
-BANK_NAME = "Maybank"
-BANK_ACCOUNT_NAME = "Muhammad Hamizan bin Ahmad Zuki"
-BANK_ACCOUNT_NO = "155041834490"
+BANK_NAME = os.getenv("BANK_NAME", "")
+BANK_ACCOUNT_NAME = os.getenv("BANK_ACCOUNT_NAME", "")
+BANK_ACCOUNT_NO = os.getenv("BANK_ACCOUNT_NO", "")
 
 # BROKER - ISI LINK KAU KAT SINI
 BROKER_NAME = "Elev8"
