@@ -19,8 +19,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
 # ---------- CONFIG ----------
-BOT_TOKEN = "9168231658:AAEsqdnGOQTDMiWbstJ_FOBP78k8r0JBop0"
-ADMIN_ID = 424384984
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "424384984"))
 
 # Billplz
 BILLPLZ_API_KEY = "ISI_API_KEY_BILLPLZ_KAT_SINI"
