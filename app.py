@@ -829,7 +829,7 @@ async def close_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         _all_signals = load_json(SIGNALS_FILE, [])
         for _s in _all_signals:
-                if _s.get("id") == sid:      
+                if _s.get("id") == sid:
                 _s["sent_count"] = sent
                 _s["sent_to"] = _sent_to
                 _s["failed_to"] = _failed_to
