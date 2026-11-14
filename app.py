@@ -2967,7 +2967,7 @@ async def ai_scan_job(context):
                 if signal_type == "SCALPING":
                     direction, price, reason, tp3_valid = _check_scalping_ai(pair)
                     globals()["_LAST_TP3_VALID"] = tp3_valid
-                                        globals()["_LAST_IS_WEAK"] = False
+                    globals()["_LAST_IS_WEAK"] = False
                 else:
                     direction, price, reason = _check_intraday_ai(pair)
                 if direction is None:
