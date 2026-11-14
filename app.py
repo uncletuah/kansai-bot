@@ -2967,20 +2967,7 @@ async def ai_scan_job(context):
                 if signal_type == "SCALPING":
                     direction, price, reason, tp3_valid = _check_scalping_ai(pair)
                     globals()["_LAST_TP3_VALID"] = tp3_valid
-                    # Kalau STRONG takde, cuba WEAK - TAMBAH, bukan ganti STRONG
-                    _is_weak = False
-                    if direction is None:
-                        w_dir, w_price, w_reason = _check_weak_scalping_ai(pair)
-                        if w_dir is not None:
-                            direction, price, reason = w_dir, w_price, w_reason
-                            _is_weak = True
-                            globals()["_LAST_TP3_VALID"] = False
-                            # WEAK = TP 40 SL 30 - override TP3 jadi False, dan tandakan weak
-                            globals()["_LAST_IS_WEAK"] = True
-                        else:
-                            globals()["_LAST_IS_WEAK"] = False
-                    else:
-                        globals()["_LAST_IS_WEAK"] = False
+                                        globals()["_LAST_IS_WEAK"] = False
                 else:
                     direction, price, reason = _check_intraday_ai(pair)
                 if direction is None:
