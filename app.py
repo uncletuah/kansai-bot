@@ -154,7 +154,10 @@ def calc_levels(pair, direction, entry, signal_type):
     pip = PIP_VALUE.get(pair, 0.10)
     # SCALPING = lebih kecil & laju, INTRADAY = lebih besar
     if signal_type == "SCALPING":
-        sl_pips, tp1_pips, tp2_pips, tp3_pips = 20, 20, 40, 60
+        sl_pips = int(os.getenv("SCALP_SL", "40"))
+        tp1_pips = int(os.getenv("SCALP_TP", "60"))
+        tp2_pips = 0
+        tp3_pips = 0
     else:
         sl_pips, tp1_pips, tp2_pips, tp3_pips = 50, 50, 100, 150
     sl_dist = sl_pips * pip
@@ -2408,73 +2411,33 @@ def _calc_stoch(ohlc_list, period=14, smooth_k=3, smooth_d=3):
     return (k_now, d_now, k_prev, d_prev), k_smooth, "OK"
 
 def _check_scalping_ai(pair):
-    """
-    Strong Scalping - Version lebih realistic
-    - M5 sebagai timeframe utama
-    - M1 sebagai confirmation
-    - RSI 15-28 (Buy) / 72-85 (Sell)
-    - Stochastic mula pusing dari oversold/overbought
-    """
-    m1_closes = _get_candles(pair, "M1")
-    m5_closes = _get_candles(pair, "M5")
-    m15_closes = _get_candles(pair, "M15")
+    """Scalping - Trend Following"""
+    if pair != "XAUUSD":
+        return None, None, "Scalping hanya untuk Gold", False
     
-    m5_ohlc = _fetch_ohlc(pair, "M5", 60)
-    m1_ohlc = _fetch_ohlc(pair, "M1", 60)
-    m15_ohlc = _fetch_ohlc(pair, "M15", 60)
-
-    if len(m5_closes) < 40 or len(m1_closes) < 30:
+    m15 = _get_candles(pair, "M15")
+    if len(m15) < 200:
         return None, None, "Data tak cukup", False
-
-    price = m5_closes[-1]
-
-    # Indicators
-    rsi_m5 = _rsi_list(m5_closes, 14)
-    rsi_m1 = _rsi_list(m1_closes, 14) if len(m1_closes) >= 30 else None
-    rsi_m15 = _rsi_list(m15_closes, 14) if len(m15_closes) >= 30 else None
-
-    stoch_m5 = _calc_stoch(m5_ohlc, 14, 3, 3)
-    stoch_m1 = _calc_stoch(m1_ohlc, 14, 3, 3)
-    stoch_m15 = _calc_stoch(m15_ohlc, 14, 3, 3) if m15_ohlc else (None, None, "no data")
-
-    if stoch_m5[0] is None:
-        return None, price, "Stochastic M5 tak cukup data", False
-
-    (k5, d5, k5_prev, d5_prev), _, _ = stoch_m5
-    k1 = stoch_m1[0][0] if stoch_m1 and stoch_m1[0] else 50
-
-    # ====================== BUY ======================
-    buy_rsi_ok = 15 <= rsi_m5 <= 28
-    buy_stoch_ok = k5 <= 25 and k5 > k5_prev          # mula naik dari oversold
-    buy_m1_ok = (rsi_m1 is None) or (rsi_m1 < 40)
-
-    if buy_rsi_ok and buy_stoch_ok and buy_m1_ok:
-        # Check M15 untuk TP3
-        tp3_valid = False
-        if rsi_m15 is not None and stoch_m15[0] is not None:
-            k15 = stoch_m15[0][0]
-            if rsi_m15 <= 35 and k15 <= 30:
-                tp3_valid = True
-
-        reason = f"STRONG BUY | RSI M5 {rsi_m5:.1f} | Stoch K {k5:.1f} naik | M1 confirm"
-        return "BUY", price, reason, tp3_valid
-
-    # ====================== SELL ======================
-    sell_rsi_ok = 72 <= rsi_m5 <= 85
-    sell_stoch_ok = k5 >= 75 and k5 < k5_prev          # mula turun dari overbought
-    sell_m1_ok = (rsi_m1 is None) or (rsi_m1 > 60)
-
-    if sell_rsi_ok and sell_stoch_ok and sell_m1_ok:
-        tp3_valid = False
-        if rsi_m15 is not None and stoch_m15[0] is not None:
-            k15 = stoch_m15[0][0]
-            if rsi_m15 >= 65 and k15 >= 70:
-                tp3_valid = True
-
-        reason = f"STRONG SELL | RSI M5 {rsi_m5:.1f} | Stoch K {k5:.1f} turun | M1 confirm"
-        return "SELL", price, reason, tp3_valid
-
-    return None, price, f"Tunggu | RSI M5 {rsi_m5:.1f} | Stoch K {k5:.1f}", False
+    
+    price = m15[-1]
+    ema_fast = int(os.getenv("EMA_FAST", "50"))
+    ema_slow = int(os.getenv("EMA_SLOW", "200"))
+    ema50 = _ema_list(m15, ema_fast)
+    ema200 = _ema_list(m15, ema_slow)
+    
+    if ema50 is None or ema200 is None:
+        return None, price, "EMA tak cukup", False
+    
+    prev_close = m15[-2] if len(m15) >= 2 else price
+    prev_ema50 = _ema_list(m15[:-1], ema_fast) if len(m15) > 1 else ema50
+    
+    if ema50 > ema200 and prev_close <= prev_ema50 and price > ema50:
+        return "BUY", price, f"TREND BUY", True
+    
+    if ema50 < ema200 and prev_close >= prev_ema50 and price < ema50:
+        return "SELL", price, f"TREND SELL", True
+    
+    return None, price, "Tunggu", False
 
 def _check_weak_scalping_ai(pair):
     # WEAK SIGNAL - BETUL IKUT BINCANG: Stoch SAJA 5,3,3, M1 & M5 dua-dua kena sama
