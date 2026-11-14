@@ -2614,7 +2614,7 @@ async def _create_ai_signal(context, pair, direction, entry, signal_type, reason
     _labels = {"XAUUSD": "GOLD (XAUUSD)", "BTCUSD": "BTC (BTCUSD)", "EURUSD": "EUR / USD", "GBPUSD": "GBP / USD", "AUDUSD": "AUD / USD", "USDCAD": "USD / CAD", "NZDUSD": "NZD / USD", "USDCHF": "USD / CHF", "USDJPY": "USD / JPY", "EURJPY": "EUR / JPY", "GBPJPY": "GBP / JPY", "EURGBP": "EUR / GBP", "XAGUSD": "SILVER (XAGUSD)"}
     pair_label = _labels.get(pair, pair)
     arrow = "🟢 BUY" if direction == "BUY" else "🔴 SELL"
-        if signal_type == "SCALPING":
+    if signal_type == "SCALPING":
         type_label = "⚡ SCALPING"
     else:
         type_label = "📈 INTRADAY"
