@@ -4116,13 +4116,11 @@ async def ai_test_cmd(update, context):
     for pair in ["XAUUSD", "BTCUSD"]:
         for signal_type in ["SCALPING", "INTRADAY"]:
             if signal_type == "SCALPING":
-            if signal_type == "SCALPING":
                 direction, price, reason, tp3_valid = _check_scalping_ai(pair)
                 sl = int(os.getenv("SCALP_SL", "40"))
                 tp = int(os.getenv("SCALP_TP", "60"))
                 reason = f"{reason} | SL {sl} TP {tp}"
             else:
-                direction, price, reason = _check_intraday_ai(pair)
                 direction, price, reason = _check_intraday_ai(pair)
             await update.message.reply_text(f"AI Check {pair} {signal_type}:\\nDirection: {direction}\\nPrice: {price}\\nReason: {reason}")
 
