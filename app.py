@@ -1942,7 +1942,7 @@ def _fetch_twelvedata(pair, timeframe="M5", limit=120):
     iv_map = {"M1": "1min", "M5": "5min", "M15": "15min", "H1": "1h", "H4": "4h"}
     iv = iv_map.get(timeframe, "5min")
     # Cuba demo key dulu, kalau user ada key sendiri boleh tukar kat sini
-   for api_key in [os.getenv("TWELVEDATA_API_KEY", "")]:
+     for api_key in [os.getenv("TWELVEDATA_API_KEY", "")]:
         try:
             url = f"https://api.twelvedata.com/time_series?symbol={sym}&interval={iv}&outputsize={limit}&apikey={os.getenv('TWELVEDATA_API_KEY', '')}"
             r = _req.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=60)
