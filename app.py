@@ -2614,27 +2614,18 @@ async def _create_ai_signal(context, pair, direction, entry, signal_type, reason
     _labels = {"XAUUSD": "GOLD (XAUUSD)", "BTCUSD": "BTC (BTCUSD)", "EURUSD": "EUR / USD", "GBPUSD": "GBP / USD", "AUDUSD": "AUD / USD", "USDCAD": "USD / CAD", "NZDUSD": "NZD / USD", "USDCHF": "USD / CHF", "USDJPY": "USD / JPY", "EURJPY": "EUR / JPY", "GBPJPY": "GBP / JPY", "EURGBP": "EUR / GBP", "XAGUSD": "SILVER (XAGUSD)"}
     pair_label = _labels.get(pair, pair)
     arrow = "🟢 BUY" if direction == "BUY" else "🔴 SELL"
-    if signal_type == "SCALPING" and globals().get("_LAST_IS_WEAK", False):
-        type_label = "🔴 WEAK SIGNAL - DYOR"
-        # Override header: WEAK = merah, STRONG = hijau
-    elif signal_type == "SCALPING":
-        type_label = "🟢 STRONG SIGNAL"
+        if signal_type == "SCALPING":
+        type_label = "⚡ SCALPING"
     else:
         type_label = "📈 INTRADAY"
     sl_usd = usd_from_pips(sl_pips)
     tp1_usd = usd_from_pips(tp1_pips)
     tp2_usd = usd_from_pips(tp2_pips)
     tp3_usd = usd_from_pips(tp3_pips) if tp3_pips is not None else 0
-    if _is_weak:
-        tp_line = f"TP: *{tp1}* (+40 pips / +${tp1_usd:.2f})\\n"
-        tp_line += "🔴 WEAK SIGNAL - DYOR - Base on Stoch 5,3,3 saja, bukan setup penuh\\n"
-    elif tp3 is None:
-        tp_line = f"TP1: *{tp1}* (+{tp1_pips} pips / +${tp1_usd:.2f})\\nTP2: *{tp2}* (+{tp2_pips} pips / +${tp2_usd:.2f})\\n"
-        tp_line += "⚠️ M15 TAK CONFIRM - TP1 + TP2 SAHAJA (TP3 tak valid)\\n"
+    if signal_type == "SCALPING":
+        tp_line = f"TP: *{tp1}* (+{tp1_pips} pips / +${tp1_usd:.2f})\\n"
     else:
         tp_line = f"TP1: *{tp1}* (+{tp1_pips} pips / +${tp1_usd:.2f})\\nTP2: *{tp2}* (+{tp2_pips} pips / +${tp2_usd:.2f})\\nTP3: *{tp3}* (+{tp3_pips} pips / +${tp3_usd:.2f})\\n"
-        if signal_type == "SCALPING":
-            tp_line += "✅ M15 CONFIRM - TP1 + TP2 + TP3 VALID\\n"
     msg = (
         f"🤖 *KANSAI SIGNAL - AI {type_label} #{new_id}*\\n\\n"
         f"Pair: *{pair_label}*\\n"
