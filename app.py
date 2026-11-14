@@ -4116,15 +4116,13 @@ async def ai_test_cmd(update, context):
     for pair in ["XAUUSD", "BTCUSD"]:
         for signal_type in ["SCALPING", "INTRADAY"]:
             if signal_type == "SCALPING":
+            if signal_type == "SCALPING":
                 direction, price, reason, tp3_valid = _check_scalping_ai(pair)
-                # Tunjuk WEAK jugak dalam /ai_test - TAMBAH, bukan ganti
-                w_dir, w_price, w_reason = _check_weak_scalping_ai(pair)
-                if w_dir is not None:
-                    await update.message.reply_text(f"⚠️ WEAK SCALPING {pair}:\n{w_reason}\nTP 40 SL 30")
-                if direction is None and w_dir is None:
-                    await update.message.reply_text(f"AI Check {pair} SCALPING:\nSTRONG: Tiada\nWEAK: Tiada\n{reason}")
-                reason = reason + f" | TP3 Valid: {'YA - TP1+TP2+TP3' if tp3_valid else 'TAK - TP1+TP2 SAHAJA'}"
+                sl = int(os.getenv("SCALP_SL", "40"))
+                tp = int(os.getenv("SCALP_TP", "60"))
+                reason = f"{reason} | SL {sl} TP {tp}"
             else:
+                direction, price, reason = _check_intraday_ai(pair)
                 direction, price, reason = _check_intraday_ai(pair)
             await update.message.reply_text(f"AI Check {pair} {signal_type}:\\nDirection: {direction}\\nPrice: {price}\\nReason: {reason}")
 
