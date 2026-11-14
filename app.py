@@ -828,7 +828,7 @@ async def close_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 _failed_to.append(f"@{u.get('username','-')} (ID:{uid}) - {str(_e_send)[:80]}")
     try:
         _all_signals = load_json(SIGNALS_FILE, [])
-        for _s in _all_signals:
+            for _s in _all_signals:
                 if _s.get("id") == sid:
                 _s["sent_count"] = sent
                 _s["sent_to"] = _sent_to
